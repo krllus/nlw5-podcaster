@@ -3,19 +3,29 @@
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
-trigger:
-  - master
-
 pool:
-  vmImage: 'ubuntu-latest'
-
+  name: Azure Pipelines
 steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: '10.x'
-    displayName: 'Install Node.js'
+- script: 'npm install'
+  displayName: 'Install Dependencies'
 
-  - script: |
-      npm install
-      npm test
-    displayName: 'npm install and test'  
+- script: |
+   npm run build
+   
+  displayName: 'Build the project'
+
+- task: CopyFiles@2
+  displayName: 'Copy Files'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)/out'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: ArchiveFiles@2
+  displayName: 'Archive $(Build.ArtifactStagingDirectory)'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: static-next-web'
+  inputs:
+    ArtifactName: 'static-next-web'
